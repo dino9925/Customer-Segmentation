@@ -11,12 +11,10 @@ import random
 import string
 import plotly.express as px
 
-# File to store user credentials
 USERS_FILE = "users.csv"
 Mall_Customer_file = "Mall_Customers.csv"
 Customer_file = "Customer Data.csv"
 
-# Load existing users from CSV
 def load_users():
     if os.path.exists(USERS_FILE):
         users_df = pd.read_csv(USERS_FILE, dtype={"username": str, "password": str})
@@ -25,7 +23,6 @@ def load_users():
         return pd.DataFrame(columns=["username", "password"])
 
 
-# Save new user to CSV
 def save_user(username, password):
     users_df = load_users()
     new_user = pd.DataFrame({"username": [username], "password": [password]})
@@ -33,19 +30,15 @@ def save_user(username, password):
     users_df.to_csv(USERS_FILE, index=False)
 
 
-# Get query parameters
 query_params = st.query_params
 
-# Initialize session state variables using query parameters
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = query_params.get("authenticated", "false") == "true"
 if "current_user" not in st.session_state:
     st.session_state.current_user = query_params.get("current_user", "")
 if "current_page" not in st.session_state:
-    st.session_state.current_page = query_params.get("page", "Log-in")  # Default page
+    st.session_state.current_page = query_params.get("page", "Log-in")  
 
-
-# Function for Authentication Menu (Login & Signup)
 def auth_menu():
     with st.sidebar:
         return option_menu(
@@ -55,7 +48,6 @@ def auth_menu():
         )
 
 
-# Function for Navigation Menu (Dashboard, Projects, Dataset, Logout)
 def navigation_menu():
     with st.sidebar:
         return option_menu(
@@ -67,10 +59,9 @@ def navigation_menu():
         )
 
 
-# Function to handle login
 def login():
     with st.form("login_form"):
-        st.subheader("🔐 Log In")
+        st.subheader("Log In")
         username = st.text_input("Enter Your Username").lower().strip()
         password = st.text_input("Enter Your Password", type="password").strip()
         submit = st.form_submit_button("Submit")
@@ -85,9 +76,8 @@ def login():
             if not user.empty:
                 st.session_state.authenticated = True
                 st.session_state.current_user = username
-                st.session_state.current_page = "Dashboard"  # Redirect to Dashboard after login
+                st.session_state.current_page = "Dashboard"  
 
-                # Update query params to store login state
                 query_params.update(authenticated="true", current_user=username, page="Dashboard")
 
                 st.success(f"Login successful! Welcome, {username.capitalize()}!")
@@ -96,7 +86,6 @@ def login():
                 st.error("Invalid username or password")
 
 
-# Function to handle registration
 def register():
     with st.form("register_form"):
         st.subheader("📝 Sign-Up")
@@ -115,7 +104,6 @@ def register():
                 st.success("Registration successful! Please log in.")
 
 
-# Export functions
 def export_to_excel(df, filename):
     """Exports the given dataframe to an Excel file."""
     df.to_excel(filename, index=False)
@@ -128,12 +116,10 @@ def export_to_pdf(df, filename):
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
-    # Adding table header
     for column in df.columns:
         pdf.cell(40, 10, column, border=1)
     pdf.ln()
 
-    # Adding table rows
     for _, row in df.iterrows():
         for item in row:
             pdf.cell(40, 10, str(item), border=1)
@@ -142,22 +128,19 @@ def export_to_pdf(df, filename):
     pdf.output(filename)
 
 
-# Function to query Gemini AI
 def query_gemini(user_query, df):
     """Send user query along with dataset context to Google Gemini."""
-    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]  # Replace with your actual API key
-    genai.configure(api_key=GOOGLE_API_KEY)
+    GOOGLE_API_KEY = st.secrets["apikey"]  
+    genai.configure(api_key=apikey)
     model = genai.GenerativeModel("gemini-1.5-flash")
     context = f"Given the dataset: {df.to_dict(orient='records')}, answer: {user_query}"
     response = model.generate_content(context)
     return response.text
 
 
-# Function to display the dashboard
 def dashboard():
     menu = navigation_menu()
 
-    # Update current page in session state and query params
     st.session_state.current_page = menu
     query_params.update(page=menu)
 
@@ -166,7 +149,7 @@ def dashboard():
         st.title("Intelligent Customer Segmentation and Predictive Insights for B2C Growth")
 
     elif menu == "Projects":
-        st.title("💼 Projects")
+        st.title("Projects")
         st.write("Here are your projects.")
 
     elif menu == "Dataset":
@@ -174,14 +157,14 @@ def dashboard():
             df1 = pd.read_csv(Mall_Customer_file)
             df2 = pd.read_csv(Customer_file)
             st.write("### Mall Customers Dataset:")
-            st.dataframe(df1)  # Display only 1000 random rows
+            st.dataframe(df1)  
             st.write("### Customers Dataset:")
-            st.dataframe(df2)  # Display only 1000 random rows
+            st.dataframe(df2)  
 
 
 
     elif menu == "Analytics":
-        st.title("📊 Customer Analytics")
+        st.title("Customer Analytics")
         st.header("Bar graph of Age Groups and Spending Scores")
 
         df = pd.read_csv(Mall_Customer_file)
@@ -214,15 +197,15 @@ def dashboard():
 
         fig = px.histogram(
             df,
-            x="Age",  # Column name from your dataset
-            nbins=20,  # You can change number of bins
+            x="Age", 
+            nbins=20,  
             title="Distribution of Customer Ages",
             labels={"Age": "Customer Age"},
         )
 
         fig.update_traces(
-            marker_line_color="black",  # Border color
-            marker_line_width=1.5  # Border width
+            marker_line_color="black",  
+            marker_line_width=1.5  
         )
 
         st.plotly_chart(fig)
@@ -231,7 +214,7 @@ def dashboard():
 
     elif menu == "Chatbot":
 
-        st.title("🤖 AI Chatbot (Ask about customer data)")
+        st.title("AI Chatbot (Ask about customer data)")
         selected_file = st.selectbox("Select the Dataset", [Customer_file, Mall_Customer_file])
 
         user_query = st.text_input("Ask me anything about customer data!")
@@ -255,25 +238,22 @@ def dashboard():
 
 
     elif menu == "Logout":
-        # Clear session state
         st.session_state.authenticated = False
         st.session_state.current_user = ""
         st.session_state.current_page = "Log-in"
 
-        # Update query params
         query_params.update(authenticated="false", current_user="", page="Log-in")
 
         st.success("Logged out successfully!")
         st.rerun()
 
 
-# Main Logic
 if st.session_state.authenticated:
     dashboard()
 else:
     user_choice = auth_menu()
-    st.session_state.current_page = user_choice  # Update current page in session
-    query_params.update(page=user_choice)  # Update query params
+    st.session_state.current_page = user_choice 
+    query_params.update(page=user_choice)  
 
     if user_choice == "Log-in":
         login()

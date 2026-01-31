@@ -92,10 +92,6 @@ streamlit run sample.py
     └── secrets.toml         # API keys (not committed to repo)
 ```
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
 ---
 
 *Developed by Dhruv*
